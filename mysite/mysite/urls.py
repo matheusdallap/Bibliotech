@@ -14,10 +14,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.urls import path, include, re_path
 from django.contrib import admin
-from django.urls import include, path
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("Bibliotech/", include("Bibliotech.urls")),
     path('admin/', admin.site.urls),
+    path('bibliotech/', include('Bibliotech.urls')),
+    re_path(r'^[Bb][Ii][Bb][Ll][Ii][Oo][Tt][Ee][Cc][Hh]/', RedirectView.as_view(url='/bibliotech/', permanent=True)),
 ]
