@@ -21,6 +21,11 @@ class createUserView(APIView):
                 {"status": "error", "message": "Login e senha são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST
             )
         
+        if User.objects.filter(username=login_name).exists():
+            return Response(
+                {"status": "error", "message": "Usuário ja existe."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        
         user = User.objects.create_user(username=login_name,password=password)
         return Response(
                 {"status": "success", "message": "Usuário criado com sucesso!"}, status=status.HTTP_201_CREATED
