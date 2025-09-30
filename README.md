@@ -42,9 +42,9 @@ Bibliotech é um sistema de visualização e empréstimo de livros, utilizando u
 ## Tecnologias utilizadas
 O projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-- Backend: 
-- Frontend: 
-- Banco de Dados: 
+- Backend: Django com REST Framework (Python)
+- Frontend: Next.js
+- Banco de Dados: PostgreSQL
 
 ---
 
