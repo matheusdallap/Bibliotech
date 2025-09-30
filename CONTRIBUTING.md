@@ -23,7 +23,7 @@
 ---
 
 ## Mensagens de commit
-Formato: <tipo>: <descrição>
+Formato: (tipo): (descrição)
 
 - Tipos utilizados:
     - feat: para novas funcionalidade
