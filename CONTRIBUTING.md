@@ -15,10 +15,6 @@
         - Main: histórico oficial, deve estar sempre estável
         - Develop: branch principal de integração com todas as features concluídas
 
-    - Branches de apoio:
-        - Feature: serve para desenvolver uma nova funcionalidade
-        - Hotfix: serve para corrigir bugs críticos
-
 
 ---
 
