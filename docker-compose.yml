@@ -22,6 +22,8 @@ services:
         /app/postgres_start.sh &&
         python manage.py makemigrations &&
         python manage.py migrate &&
+        python create_admin.py &&
+        python populate_db.py &&
         python manage.py runserver 0.0.0.0:8000
       "
     environment:

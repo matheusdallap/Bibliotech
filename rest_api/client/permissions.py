@@ -7,9 +7,7 @@ class IsAdminOrSelf(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Admin tem acesso total
         if request.user.is_staff:
             return True
 
-        # Usuário comum só pode acessar a si mesmo
         return obj.id == request.user.id
