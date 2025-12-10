@@ -13,10 +13,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   web:
-    build: ./rest_api
+    build:
+      context: ./rest_api
+      dockerfile: Dockerfile
     container_name: django_api
     command: >
-      ./postgres_start.sh bash -c "
+      bash -c "
+        /app/postgres_start.sh &&
         python manage.py makemigrations &&
         python manage.py migrate &&
         python manage.py runserver 0.0.0.0:8000
@@ -30,7 +33,7 @@ services:
       POSTGRES_PORT: 5432
       DEBUG: 1
     volumes:
-      - .:/app
+      - ./rest_api:/app
     ports:
       - "8000:8000"
     depends_on:

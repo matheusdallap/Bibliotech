@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo "Aguardando o Postgres..."
 
@@ -9,6 +10,10 @@ done
 
 echo "Postgres está pronto!"
 
-python manage.py migrate
+echo "Gerando migrations..."
+python manage.py makemigrations --noinput
+
+echo "Aplicando migrate..."
+python manage.py migrate --noinput
 
 exec "$@"
