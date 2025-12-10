@@ -1,7 +1,10 @@
 from rest_framework import generics, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-
-from rest_framework_simplejwt.views import TokenObtainPairView  # <-- LOGIN JWT
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import (
     CustomerSerializer,
@@ -46,3 +49,18 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrSelf]
+
+class LogoutView(APIView):
+    """
+    Recebe o refresh token e o coloca na blacklist, invalidando-o.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logout realizado com sucesso."}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": "Token inválido ou não fornecido."}, status=status.HTTP_400_BAD_REQUEST)
