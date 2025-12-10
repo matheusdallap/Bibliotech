@@ -1,17 +1,15 @@
 FROM python:3.11-slim
 
-WORKDIR /rest_api
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y postgresql-client && apt-get clean
 
-COPY requirements.txt .
+COPY requirements.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/
+
+RUN chmod +x /app/postgres_start.sh
 
 EXPOSE 8000
-
-ENTRYPOINT ["/rest_api/postgres_start.sh"]
-
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000", ]
