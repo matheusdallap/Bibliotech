@@ -5,5 +5,6 @@ from .views import health
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health),
-    path('api/client/', include('client.urls')),
+    path('client/', include('client.urls')),
+    path('books/', include('books.urls'))
 ]
