@@ -3,11 +3,9 @@ from django.db import models
 
 
 class Customer(AbstractUser):
-    """
-    Custom user model baseado em AbstractUser.
-    Mantém todos os campos padrão (username, password, email,
-    is_staff, is_superuser, groups, permissions etc).
+    email = models.EmailField(unique = True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
     
-    Campos extras podem ser adicionados futuramente aqui.
-    """
-    pass
+    def __str__(self):
+        return self.email

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework.validators import UniqueValidator
 
 Customer = get_user_model()
 
@@ -20,7 +21,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=Customer.objects.all(), message="Este email já está cadastrado.")]
+    )
+    
+    password = serializers.CharField(
+            write_only=True,
+            min_length=6,
+            error_messages={'min_length': 'A senha deve ter no mínimo 6 caracteres.'}
+    )
 
     class Meta:
         model = Customer
