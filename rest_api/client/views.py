@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from .serializers import CustomerSerializer, RegisterSerializer
+from .serializers import CustomerSerializer, RegisterSerializer, CustomLoginSerializer
 from .permissions import IsAdminOrSelf
 from .mixins import AdminLogMixin
 
@@ -24,6 +24,7 @@ class LoginView(TokenObtainPairView):
     """
     Login usando JWT. Retorna access e refresh tokens.
     """
+    serializer_class = CustomLoginSerializer
     permission_classes = [permissions.AllowAny]
 
 
