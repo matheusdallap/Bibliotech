@@ -5,6 +5,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import AuthenticationFailed
 
 from .serializers import CustomerSerializer, RegisterSerializer, CustomLoginSerializer
 from .permissions import IsAdminOrSelf
@@ -14,10 +15,6 @@ Customer = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
-    """
-    Endpoint público para criar usuários.
-    Retorna: { "success": true, "message": "...", "data": {...} }
-    """
     queryset = Customer.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
@@ -38,10 +35,12 @@ class RegisterView(generics.CreateAPIView):
                 headers=headers
             )
         else:
+            first_error = next(iter(serializer.errors.values()))[0]
+            
             return Response(
                 {
                     "success": False,
-                    "message": "Erro ao criar conta. Verifique os dados.",
+                    "message": first_error,
                     "errors": serializer.errors
                 },
                 status=status.HTTP_400_BAD_REQUEST
@@ -51,43 +50,46 @@ class RegisterView(generics.CreateAPIView):
 class LoginView(TokenObtainPairView):
     """
     Login customizado.
-    Intercepta a resposta padrão do JWT para adicionar o envelope 'success'.
+    Intercepta erros de autenticação para retornar success: False.
     """
     serializer_class = CustomLoginSerializer
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        # Tenta executar o login padrão da biblioteca
         try:
             response = super().post(request, *args, **kwargs)
             
-            # Se chegou aqui e o status é 200, deu certo
-            if response.status_code == status.HTTP_200_OK:
-                return Response({
-                    "success": True,
-                    "message": "Login realizado com sucesso.",
-                    "data": response.data
-                }, status=status.HTTP_200_OK)
-            
-            # Caso contrário, retorna o erro original mas envelopado
+            return Response({
+                "success": True,
+                "message": "Login realizado com sucesso.",
+                "data": response.data
+            }, status=status.HTTP_200_OK)
+
+        except AuthenticationFailed:
             return Response({
                 "success": False,
-                "message": "Erro ao realizar login.",
-                "errors": response.data
-            }, status=response.status_code)
+                "message": "Credenciais inválidas ou conta inativa.",
+                "errors": {
+                    "detail": "No active account found with the given credentials"
+                }
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
         except (InvalidToken, TokenError) as e:
             return Response({
                 "success": False,
-                "message": "Credenciais inválidas ou erro no token.",
+                "message": "Token inválido ou expirado.",
                 "errors": str(e)
             }, status=status.HTTP_401_UNAUTHORIZED)
+            
+        except Exception as e:
+             return Response({
+                "success": False,
+                "message": "Erro desconhecido no login.",
+                "errors": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
-    """
-    Logout com resposta padronizada.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -97,7 +99,7 @@ class LogoutView(APIView):
             if not refresh_token:
                 return Response({
                     "success": False,
-                    "message": "Refresh token é obrigatório para logout."
+                    "message": "Refresh token é obrigatório."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             token = RefreshToken(refresh_token)
@@ -116,31 +118,22 @@ class LogoutView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# --- Views Administrativas / Listagem (Geralmente retornam direto, mas podemos padronizar se quiser) ---
-
 class CustomerListView(generics.ListAPIView):
-    """
-    Lista todos os usuários.
-    """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAdminUser]
-
-    # Padroniza o GET da Lista
+    
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             "success": True,
-            "message": "Lista de usuários recuperada com sucesso.",
+            "message": "Lista recuperada.",
             "data": serializer.data
         })
 
 
 class CustomerDetailView(AdminLogMixin, generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET, PUT, PATCH, DELETE com respostas padronizadas.
-    """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrSelf]
@@ -150,7 +143,7 @@ class CustomerDetailView(AdminLogMixin, generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance)
         return Response({
             "success": True,
-            "message": "Perfil recuperado com sucesso.",
+            "message": "Perfil recuperado.",
             "data": serializer.data
         })
 
@@ -167,9 +160,11 @@ class CustomerDetailView(AdminLogMixin, generics.RetrieveUpdateDestroyAPIView):
                 "data": serializer.data
             })
         else:
+            first_error = next(iter(serializer.errors.values()))[0]
+            
             return Response({
                 "success": False,
-                "message": "Erro ao atualizar perfil.",
+                "message": first_error,
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
