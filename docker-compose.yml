@@ -19,7 +19,6 @@ services:
     container_name: django_api
     command: >
       bash -c "
-        /app/postgres_start.sh &&
         python manage.py makemigrations &&
         python manage.py migrate &&
         python create_admin.py &&
@@ -40,6 +39,15 @@ services:
       - "8000:8000"
     depends_on:
       - db
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    ports: 
+      - "3000:3000"
 
 volumes:
   postgres_data:
