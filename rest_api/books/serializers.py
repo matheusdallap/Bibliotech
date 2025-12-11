@@ -1,15 +1,28 @@
 from rest_framework import serializers
-from .models import Author, Publisher, Book
+from django.contrib.auth.models import User
+from .models import Author, Publisher, Book, Comment
+
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = ["id", "name"]
 
+
 class PublisherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publisher
         fields = ["id", "name"]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ["id", "user", "book", "text", "created_at"]
+        read_only_fields = ["user", "book", "created_at"]
+
 
 class BookSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)
