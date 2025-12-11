@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     BookListView,
+    BookDetailView,
     AdminBookView,
     AdminBookDetailView,
     BookCommentListCreateView,
@@ -8,7 +9,8 @@ from .views import (
 
 urlpatterns = [
     path("", BookListView.as_view(), name="book-list"),
-    path("admin/", AdminBookView.as_view(), name="admin-book-list-create"),
-    path("admin/<int:pk>/", AdminBookDetailView.as_view(), name="admin-book-detail"),
-    path("<int:book_id>/comments/", BookCommentListCreateView.as_view(), name="book-comments"),
+    path("<int:pk>/", BookDetailView.as_view(), name="book-detail-public"),
+    path("create/", AdminBookView.as_view(), name="admin-book-list-create"),
+    path("detail/<int:pk>/", AdminBookDetailView.as_view(), name="admin-book-detail"),
+    path("comments/<int:book_id>/", BookCommentListCreateView.as_view(), name="book-comments"),
 ]
