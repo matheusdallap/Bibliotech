@@ -8,13 +8,14 @@ export async function authRegister(formData) {
       body: JSON.stringify(formData)
     });
 
-    if (!response.ok) {
-      return { success: false };
-    }
-
-    return await response.json();
+  const data = await response.json();
+  
+  return data;
 
   } catch (error) {
-    return { success: false };
+    return {
+      success: false,
+      message: "Erro de conexão com o servidor."
+    };
   }
-}
+} 

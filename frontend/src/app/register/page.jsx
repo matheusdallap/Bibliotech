@@ -126,8 +126,6 @@ export default function Register() {
       // Chama a função authRegister
       const result = await authRegister(registerData)
       
-      console.log('Resposta do authRegister:', result)
-      
       // Verifica se o registro foi bem-sucedido
       if (result && result.success) {
         console.log('Registro bem-sucedido:', result)

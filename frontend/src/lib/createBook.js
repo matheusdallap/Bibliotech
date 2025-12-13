@@ -8,7 +8,7 @@ export async function createBook(bookData) {
     }
 
     // Requisição POST para criar o livro
-    const response = await fetch('http://localhost:8000/books/admin/', {
+    const response = await fetch('http://localhost:8000/books/create/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
