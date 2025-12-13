@@ -106,3 +106,6 @@ REST_FRAMEWORK = {
     ),
     "EXCEPTION_HANDLER": "client.exceptions.custom_exception_handler",
 }
+
+MEDIA_URL = '/book_covers/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'book_covers')

@@ -66,15 +66,20 @@ class BookSerializer(serializers.ModelSerializer):
         author_name = validated_data.pop("author_name", None)
         publisher_name = validated_data.pop("publisher_name", None)
 
+        continuation = validated_data.pop("continuation", [])
+
         book = Book.objects.create(**validated_data)
 
         if author_name:
-            author_obj, created = Author.objects.get_or_create(name=author_name)
+            author_obj, _ = Author.objects.get_or_create(name=author_name)
             book.author = author_obj
 
         if publisher_name:
-            publisher_obj, created = Publisher.objects.get_or_create(name=publisher_name)
+            publisher_obj, _ = Publisher.objects.get_or_create(name=publisher_name)
             book.publisher = publisher_obj
-        
+
         book.save()
+        if continuation:
+            book.continuation.set(continuation)
+
         return book
