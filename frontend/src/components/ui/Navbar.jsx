@@ -25,7 +25,6 @@ export default function Navbar() {
         const result = await getUserProfile(user.id)
         
         if (result.success) {
-          console.log("Perfil do usuário:", result.data)
           setProfile(result.data)
         } else {
           console.error("Erro ao buscar perfil:", result.message)
@@ -44,14 +43,16 @@ export default function Navbar() {
     try {
       setIsLoggingOut(true)
       const result = await authLogout()
-      if (result.success) {
-        logout()
-      }
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error)
-      setIsLoggingOut(false)
-    }
+      logout()
+       router.replace('/login')
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error)
+    logout()
+    router.replace('/login')
+  } finally {
+    setIsLoggingOut(false)
   }
+}
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -180,7 +181,7 @@ export default function Navbar() {
                     <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
 
                     {/* Logout */}
-                    <Link href="/login">
+
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
@@ -200,7 +201,6 @@ export default function Navbar() {
                         </>
                       )}
                     </button>
-                    </Link>
                   </div>
                 </>
               )}
