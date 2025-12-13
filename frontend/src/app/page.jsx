@@ -29,19 +29,32 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
       {/* Header Simples */}
-      <header className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">BIBLIOTECH</h1>
-          <div className="flex gap-4">
-            <Link href="/login" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-              Login
-            </Link>
-            <Link href="/register" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-              Cadastro
-            </Link>
-          </div>
-        </div>
-      </header>
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0f0f0f]/95">
+                <div className="container mx-auto px-4 py-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        BIBLIOTECH
+                      </Link>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <Link 
+                        href="/login" 
+                        className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                      >
+                        Entrar
+                      </Link>
+                      <Link 
+                        href="/register" 
+                        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                      >
+                        Cadastrar
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </header>
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
@@ -169,7 +182,7 @@ export default function Home() {
                 </button>
               </Link>
               <Link href="/catalogue">
-                <button className="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-200">
+                <button className="px-8 py-2.5 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-200">
                   Explorar sem Cadastro
                 </button>
               </Link>
