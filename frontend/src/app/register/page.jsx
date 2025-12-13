@@ -173,7 +173,7 @@ export default function Register() {
                 <img 
                   src="/images/imagem3.jpg" 
                   alt="Cadastro na Biblioteca - Bibliotech"
-                  className="w-full h-[600px] object-cover"
+                  className="w-full h-[1000px] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
               

@@ -2,35 +2,32 @@ export async function authLogin(formData) {
   try {
     const response = await fetch("http://localhost:8000/client/login/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData)
     });
 
     if (!response.ok) {
-      throw new Error(`Erro na requisição: ${response.status}`);
+      return { success: false, message: "Erro ao fazer login." };
     }
 
     const result = await response.json();
-    
-    if (result.success && result.data) {
-      const accessToken = result.data.access;
-      const refreshToken = result.data.refresh;
 
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
+    if (!result.success) return result;
 
-      console.log("Tokens salvos:", {
-        access: accessToken,
-        refresh: refreshToken
-      });
-    }
+    return {
+      success: true,
+      user: {
+        id: result.data.user_id,
+        username: result.data.username,
+        email: result.data.email,
+        first_name: result.data.first_name,
+        is_admin: result.data.is_admin
+      },
+      access: result.data.access,
+      refresh: result.data.refresh
+    };
 
-    return result;
-
-  } catch (error) {
-    console.error("Erro ao fazer login:", error);
-    return null;
+  } catch (err) {
+    return { success: false, message: "Falha de comunicação com servidor." };
   }
 }
