@@ -6,6 +6,8 @@ from .views import (
     AdminBookDetailView,
     BookCommentListCreateView,
     RateBookView,
+    FavoriteListView,
+    FavoriteActionView
 )
 
 urlpatterns = [
@@ -15,4 +17,6 @@ urlpatterns = [
     path("detail/<int:pk>/", AdminBookDetailView.as_view(), name="admin-book-detail"),
     path("comments/<int:book_id>/", BookCommentListCreateView.as_view(), name="book-comments"),
     path("<int:pk>/rate/", RateBookView.as_view(), name="book-rate"),
+    path("favorites/", FavoriteListView.as_view(), name="favorite-list"),
+    path("favorites/<int:pk>/", FavoriteActionView.as_view(), name="favorite-toggle"),
 ]

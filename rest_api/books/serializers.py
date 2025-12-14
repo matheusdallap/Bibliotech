@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Author, Publisher, Book, Comment, Rating
+from .models import Author, Publisher, Book, Comment, Rating, Favorite
 from django.db.models import Avg
 
 
@@ -14,7 +14,6 @@ class PublisherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publisher
         fields = ["id", "name"]
-
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
@@ -118,3 +117,35 @@ class BookSerializer(serializers.ModelSerializer):
             book.continuation.set(continuation)
 
         return book
+
+
+class BookSummarySerializer(serializers.ModelSerializer):
+    """
+    Versão leve do livro para listagens (Favoritos, Home, etc).
+    SEM comentários, SEM descrição longa, SEM editora.
+    """
+    author = AuthorSerializer(read_only=True)
+    average_rating = serializers.SerializerMethodField() # Mantemos a nota pq é legal ver na lista
+
+    class Meta:
+        model = Book
+        fields = [
+            "id", 
+            "title", 
+            "image",
+            "author", 
+            "average_rating"
+        ]
+
+    def get_average_rating(self, obj):
+        average = obj.ratings.aggregate(Avg('stars')).get('stars__avg')
+        if average:
+            return round(average, 1)
+        return 0
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    book = BookSummarySerializer(read_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = ['id', 'book', 'added_at']
