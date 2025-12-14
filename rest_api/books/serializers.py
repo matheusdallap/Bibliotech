@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Author, Publisher, Book, Comment
+from .models import Author, Publisher, Book, Comment, Rating
+from django.db.models import Avg
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -18,12 +19,24 @@ class PublisherSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     book = serializers.ReadOnlyField(source='book.title')
+    user_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ["id", "user", "book", "text", "created_at"]
+        fields = ["id", "user", "book", "text", "created_at", "user_rating"]
         read_only_fields = ["user", "book", "created_at"]
 
+    def get_user_rating(self, obj):
+        rating = Rating.objects.filter(user=obj.user, book=obj.book).first()
+        
+        if rating:
+            return rating.stars
+        return None
+
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rating
+        fields = ['stars']
 
 class BookSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)
@@ -35,6 +48,9 @@ class BookSerializer(serializers.ModelSerializer):
     publisher_name = serializers.CharField(write_only=True, required=False, allow_null=True)
     
     short_description = serializers.SerializerMethodField()
+
+    average_rating = serializers.SerializerMethodField()
+    my_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -53,6 +69,8 @@ class BookSerializer(serializers.ModelSerializer):
             "publisher_name",
             "continuation",
             "comments",
+            "average_rating",
+            "my_rating"
         ]
 
     def get_short_description(self, obj):
@@ -61,6 +79,23 @@ class BookSerializer(serializers.ModelSerializer):
         if len(obj.description) > 200:
             return obj.description[:200] + "..."
         return obj.description
+
+    def get_average_rating(self, obj):
+        average = obj.ratings.aggregate(Avg('stars')).get('stars__avg')
+        if average:
+            return round(average, 1)
+        return 0
+
+    def get_my_rating(self, obj):
+        user = self.context.get('request').user
+        
+        if user.is_anonymous:
+            return None
+            
+        rating = obj.ratings.filter(user=user).first()
+        if rating:
+            return rating.stars
+        return None
 
     def create(self, validated_data):
         author_name = validated_data.pop("author_name", None)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Author(models.Model):
     name = models.CharField(max_length=120)
@@ -44,3 +45,19 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comentário de {self.user} em {self.book}"
+
+class Rating(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="ratings")
+    stars = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+
+    class Meta:
+        unique_together = ('user', 'book')
+        indexes = [
+            models.Index(fields=['user', 'book']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} avaliou {self.book} com {self.stars}"
