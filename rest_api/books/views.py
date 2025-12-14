@@ -47,6 +47,7 @@ class BookDetailView(generics.RetrieveAPIView):
 class AdminBookView(AdminLogMixin, generics.ListCreateAPIView):
     """
     Admin: Lista (com detalhes de admin) e Cria Livros.
+    Se o livro já existir (mesmo título), apenas adiciona ao estoque.
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
@@ -62,6 +63,28 @@ class AdminBookView(AdminLogMixin, generics.ListCreateAPIView):
         })
 
     def create(self, request, *args, **kwargs):
+        title = request.data.get('title')
+
+        existing_book = Book.objects.filter(title=title).first()
+
+        if existing_book:
+            try:
+                qtd_to_add = int(request.data.get('quantity', 1))
+            except ValueError:
+                qtd_to_add = 1
+            
+            # Soma ao que já tem no banco
+            existing_book.quantity += qtd_to_add
+            existing_book.save()
+
+            serializer = self.get_serializer(existing_book)
+            
+            return Response({
+                "success": True,
+                "message": f"Livro já existia. Estoque atualizado para {existing_book.quantity} unidades.",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+
         serializer = self.get_serializer(data=request.data)
         
         if serializer.is_valid():
@@ -75,6 +98,9 @@ class AdminBookView(AdminLogMixin, generics.ListCreateAPIView):
         else:
             # Pega o primeiro erro legível
             first_error = next(iter(serializer.errors.values()))[0]
+            if isinstance(first_error, list):
+                first_error = first_error[0]
+
             return Response({
                 "success": False,
                 "message": first_error,
