@@ -1,8 +1,9 @@
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response # <--- Necessário
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
-from .models import Book, Comment, Rating
-from .serializers import BookSerializer, CommentSerializer, RatingSerializer
+from .models import Book, Comment, Rating, Favorite
+from .serializers import BookSerializer, CommentSerializer, RatingSerializer, FavoriteSerializer
 from client.mixins import AdminLogMixin 
 
 # --- VIEWS PÚBLICAS ---
@@ -40,7 +41,6 @@ class BookDetailView(generics.RetrieveAPIView):
             "message": "Detalhes do livro recuperados.",
             "data": serializer.data
         })
-
 
 # --- VIEWS ADMINISTRATIVAS ---
 
@@ -237,3 +237,72 @@ class RateBookView(generics.CreateAPIView):
                 "stars": rating.stars
             }
         }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+
+class FavoriteListView(generics.ListAPIView):
+    """
+    Lista os livros favoritados pelo usuário logado.
+    Ordenados por data de adição (mais recente primeiro).
+    """
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Lista de favoritos recuperada.",
+            "data": serializer.data
+        })
+
+class FavoriteActionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_book(self, pk):
+        try:
+            return Book.objects.get(pk=pk)
+        except Book.DoesNotExist:
+            return None
+
+    # POST: ADICIONAR AOS FAVORITOS
+    def post(self, request, pk):
+        book = self.get_book(pk)
+        if not book:
+            return Response({"success": False, "message": "Livro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # O get_or_create já trata se existir, evitando duplicação
+        favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+
+        if created:
+            return Response({
+                "success": True, 
+                "message": "Livro adicionado aos favoritos."
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                "success": False, 
+                "message": "Este livro já está na sua lista de favoritos."
+            }, status=status.HTTP_200_OK) # Ou 409 Conflict, dependendo do gosto
+
+    # DELETE: REMOVER DOS FAVORITOS
+    def delete(self, request, pk):
+        book = self.get_book(pk)
+        if not book:
+            return Response({"success": False, "message": "Livro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Tenta buscar o favorito e deletar
+        deleted_count, _ = Favorite.objects.filter(user=request.user, book=book).delete()
+
+        if deleted_count > 0:
+            return Response({
+                "success": True, 
+                "message": "Livro removido dos favoritos."
+            }, status=status.HTTP_200_OK) # Ou 204 No Content
+        else:
+            return Response({
+                "success": False, 
+                "message": "Este livro não estava nos seus favoritos."
+            }, status=status.HTTP_404_NOT_FOUND)
