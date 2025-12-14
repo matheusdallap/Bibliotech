@@ -1,8 +1,8 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response # <--- Necessário
 from rest_framework.permissions import IsAdminUser
-from .models import Book, Comment
-from .serializers import BookSerializer, CommentSerializer
+from .models import Book, Comment, Rating
+from .serializers import BookSerializer, CommentSerializer, RatingSerializer
 from client.mixins import AdminLogMixin 
 
 # --- VIEWS PÚBLICAS ---
@@ -197,3 +197,43 @@ class BookCommentListCreateView(generics.ListCreateAPIView):
                 "message": first_error,
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class RateBookView(generics.CreateAPIView):
+    """
+    Endpoint para dar nota a um livro.
+    Se já existir nota do usuário para este livro, atualiza.
+    """
+    serializer_class = RatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        book_id = self.kwargs.get('pk') # ID do livro vem da URL
+        stars = request.data.get('stars')
+        user = request.user
+
+        # Validação manual simples para garantir que stars existe e é número
+        if not stars:
+             return Response(
+                {"success": False, "message": "O campo 'stars' é obrigatório (1 a 5)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Lógica de Update ou Create
+        # Ele busca por (user, book_id). Se achar, atualiza 'stars'. Se não, cria.
+        rating, created = Rating.objects.update_or_create(
+            user=user,
+            book_id=book_id,
+            defaults={'stars': stars}
+        )
+
+        # Prepara a mensagem de sucesso
+        msg = "Avaliação criada com sucesso!" if created else "Avaliação atualizada com sucesso!"
+        
+        return Response({
+            "success": True,
+            "message": msg,
+            "data": {
+                "book": rating.book.title,
+                "stars": rating.stars
+            }
+        }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)

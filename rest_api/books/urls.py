@@ -5,6 +5,7 @@ from .views import (
     AdminBookView,
     AdminBookDetailView,
     BookCommentListCreateView,
+    RateBookView,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("create/", AdminBookView.as_view(), name="admin-book-list-create"),
     path("detail/<int:pk>/", AdminBookDetailView.as_view(), name="admin-book-detail"),
     path("comments/<int:book_id>/", BookCommentListCreateView.as_view(), name="book-comments"),
+    path("<int:pk>/rate/", RateBookView.as_view(), name="book-rate"),
 ]
