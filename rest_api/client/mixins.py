@@ -13,11 +13,9 @@ class AdminLogMixin:
         if not user.is_authenticated:
             return
 
-        LogEntry.objects.log_action(
+        LogEntry.objects.log_actions(
             user_id=user.pk,
-            content_type_id=ContentType.objects.get_for_model(obj).pk,
-            object_id=obj.pk,
-            object_repr=str(obj),
+            queryset=[obj],
             action_flag=action_flag,
             change_message=message
         )
