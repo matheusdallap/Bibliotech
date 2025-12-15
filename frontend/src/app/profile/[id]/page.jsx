@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Navbar from '@/components/ui/Navbar'
 import { useAuth } from '@/context/AuthContext'
 import { getUserProfile } from '@/lib/getUserProfile'
 import { useAuthProtection } from '@/hooks/useAuthProtection'
@@ -71,6 +72,7 @@ export default function UserProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
+        <Navbar />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -84,6 +86,7 @@ export default function UserProfilePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
+        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl border border-red-200 dark:border-red-800/30 shadow-lg p-8">
@@ -116,6 +119,7 @@ export default function UserProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
+        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center py-12">
@@ -134,28 +138,8 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-2xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200">
-              BIBLIOTECH
-            </Link>
-            <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">|</div>
-            <div className="text-gray-700 dark:text-gray-300 font-medium hidden sm:block">
-              Perfil do Usuário
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <Link 
-              href="/dashboard" 
-              className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            >
-              Voltar ao Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Navbar substituindo o header */}
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
