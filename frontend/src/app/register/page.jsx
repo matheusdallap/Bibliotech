@@ -14,7 +14,6 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: false
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -91,13 +90,6 @@ export default function Register() {
       setError('As senhas não coincidem.')
       return false
     }
-
-    // Validação dos termos
-    if (!formData.agreeTerms) {
-      setError('Você deve aceitar os termos e condições.')
-      return false
-    }
-
     return true
   }
 
@@ -360,27 +352,6 @@ export default function Register() {
                       As senhas não coincidem
                     </p>
                   )}
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="agreeTerms"
-                    name="agreeTerms"
-                    checked={formData.agreeTerms}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-blue-600 bg-white dark:bg-[#2a2a2a] border border-blue-300 dark:border-blue-700 rounded focus:ring-blue-500 focus:ring-2 mt-1"
-                  />
-                  <label htmlFor="agreeTerms" className="text-sm text-gray-600 dark:text-gray-400">
-                    Concordo com os{' '}
-                    <Link href="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
-                      Termos de Serviço
-                    </Link>{' '}
-                    e{' '}
-                    <Link href="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
-                      Política de Privacidade
-                    </Link>
-                  </label>
                 </div>
 
                 <button
