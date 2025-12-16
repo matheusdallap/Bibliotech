@@ -1,0 +1,308 @@
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+from .models import Book, Comment, Rating, Favorite
+from .serializers import BookSerializer, CommentSerializer, RatingSerializer, FavoriteSerializer
+from client.mixins import AdminLogMixin 
+
+# --- VIEWS PÚBLICAS ---
+
+class BookListView(generics.ListAPIView):
+    """
+    Lista todos os livros (Público).
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Lista de livros recuperada.",
+            "data": serializer.data
+        })
+
+class BookDetailView(generics.RetrieveAPIView):
+    """
+    Exibe os detalhes de um livro específico (Público).
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            "success": True,
+            "message": "Detalhes do livro recuperados.",
+            "data": serializer.data
+        })
+
+# --- VIEWS ADMINISTRATIVAS ---
+
+class AdminBookView(AdminLogMixin, generics.ListCreateAPIView):
+    """
+    Admin: Lista (com detalhes de admin) e Cria Livros.
+    Se o livro já existir (mesmo título), apenas adiciona ao estoque.
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Lista administrativa recuperada.",
+            "data": serializer.data
+        })
+
+    def create(self, request, *args, **kwargs):
+        title = request.data.get('title')
+
+        existing_book = Book.objects.filter(title=title).first()
+
+        if existing_book:
+            try:
+                qtd_to_add = int(request.data.get('quantity', 1))
+            except ValueError:
+                qtd_to_add = 1
+            
+            # Soma ao que já tem no banco
+            existing_book.quantity += qtd_to_add
+            existing_book.save()
+
+            serializer = self.get_serializer(existing_book)
+            
+            return Response({
+                "success": True,
+                "message": f"Livro já existia. Estoque atualizado para {existing_book.quantity} unidades.",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response({
+                "success": True,
+                "message": "Livro criado com sucesso!",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED, headers=headers)
+        else:
+            # Pega o primeiro erro legível
+            first_error = next(iter(serializer.errors.values()))[0]
+            if isinstance(first_error, list):
+                first_error = first_error[0]
+
+            return Response({
+                "success": False,
+                "message": first_error,
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminBookDetailView(AdminLogMixin, generics.RetrieveUpdateDestroyAPIView):
+    """
+    Admin: Vê detalhes, Atualiza ou Deleta um livro.
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAdminUser]
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            "success": True,
+            "message": "Detalhes do livro recuperados.",
+            "data": serializer.data
+        })
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response({
+                "success": True,
+                "message": "Livro atualizado com sucesso.",
+                "data": serializer.data
+            })
+        else:
+            first_error = next(iter(serializer.errors.values()))[0]
+            return Response({
+                "success": False,
+                "message": first_error,
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            "success": True,
+            "message": "Livro removido com sucesso."
+        }, status=status.HTTP_200_OK)
+
+
+# --- COMENTÁRIOS ---
+
+class BookCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        book_id = self.kwargs["book_id"]
+        return Comment.objects.filter(book_id=book_id)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user=self.request.user,
+            book_id=self.kwargs["book_id"]
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Comentários recuperados.",
+            "data": serializer.data
+        })
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response({
+                "success": True,
+                "message": "Comentário postado!",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED, headers=headers)
+        else:
+            first_error = next(iter(serializer.errors.values()))[0]
+            return Response({
+                "success": False,
+                "message": first_error,
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+class RateBookView(generics.CreateAPIView):
+    """
+    Endpoint para dar nota a um livro.
+    Se já existir nota do usuário para este livro, atualiza.
+    """
+    serializer_class = RatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        book_id = self.kwargs.get('pk') # ID do livro vem da URL
+        stars = request.data.get('stars')
+        user = request.user
+
+        # Validação manual simples para garantir que stars existe e é número
+        if not stars:
+             return Response(
+                {"success": False, "message": "O campo 'stars' é obrigatório (1 a 5)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Lógica de Update ou Create
+        # Ele busca por (user, book_id). Se achar, atualiza 'stars'. Se não, cria.
+        rating, created = Rating.objects.update_or_create(
+            user=user,
+            book_id=book_id,
+            defaults={'stars': stars}
+        )
+
+        # Prepara a mensagem de sucesso
+        msg = "Avaliação criada com sucesso!" if created else "Avaliação atualizada com sucesso!"
+        
+        return Response({
+            "success": True,
+            "message": msg,
+            "data": {
+                "book": rating.book.title,
+                "stars": rating.stars
+            }
+        }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+
+class FavoriteListView(generics.ListAPIView):
+    """
+    Lista os livros favoritados pelo usuário logado.
+    Ordenados por data de adição (mais recente primeiro).
+    """
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Lista de favoritos recuperada.",
+            "data": serializer.data
+        })
+
+class FavoriteActionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_book(self, pk):
+        try:
+            return Book.objects.get(pk=pk)
+        except Book.DoesNotExist:
+            return None
+
+    # POST: ADICIONAR AOS FAVORITOS
+    def post(self, request, pk):
+        book = self.get_book(pk)
+        if not book:
+            return Response({"success": False, "message": "Livro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # O get_or_create já trata se existir, evitando duplicação
+        favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+
+        if created:
+            return Response({
+                "success": True, 
+                "message": "Livro adicionado aos favoritos."
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                "success": False, 
+                "message": "Este livro já está na sua lista de favoritos."
+            }, status=status.HTTP_200_OK) # Ou 409 Conflict, dependendo do gosto
+
+    # DELETE: REMOVER DOS FAVORITOS
+    def delete(self, request, pk):
+        book = self.get_book(pk)
+        if not book:
+            return Response({"success": False, "message": "Livro não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Tenta buscar o favorito e deletar
+        deleted_count, _ = Favorite.objects.filter(user=request.user, book=book).delete()
+
+        if deleted_count > 0:
+            return Response({
+                "success": True, 
+                "message": "Livro removido dos favoritos."
+            }, status=status.HTTP_200_OK) # Ou 204 No Content
+        else:
+            return Response({
+                "success": False, 
+                "message": "Este livro não estava nos seus favoritos."
+            }, status=status.HTTP_404_NOT_FOUND)
