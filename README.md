@@ -14,23 +14,27 @@ Bibliotech é um sistema de visualização e empréstimo de livros, utilizando u
 
 ## Funcionalidades
 
-1. Autenticação de Usuários
+1. **Autenticação e Perfis**
+    - Login, registro e gerenciamento de perfil via JWT.
+    - Níveis de acesso: Usuário Leitor e Administrador (Bibliotecário)
 
-    - Login e registro.
+2. **Gerenciamento de Acervo**
+    - Cadastro de livros com capa, autor, editora e estoque.
+    - Visualização de livros em vitrine (Dashboard).
+    - Sistema de busca e filtros.
 
-2. Gerenciamento de Empréstimos
+3. **Sistema de Empréstimos**
+    - Solicitação de empréstimo (com verificação de estoque e limites).
+    - Devolução de livros.
+    - Histórico de empréstimos do usuário.
+    - Regras de negócio automatizadas (ex: limite de 5 livros por usuário).
 
-    - Cadastro de usuários.
-    - Registro de livros.
-    - Controle do status dos empréstimos.
+4. **Comunidade e Interação**
+    - Avaliação de livros (Rating de 1 a 5 estrelas).
+    - Comentários e resenhas nas obras.
+    - Favoritar livros.
 
-3. Comunidade
-
-    - Ambiente virtual disponível para os usuários conversarem entre si.
-    - O ambiente normalmente é separado por discussão geral de gênero ou de livro específico.
-    - Feedback visual para melhor compreensão.
-
-4. Dashboard Interativo
+5. **Dashboard Interativo**
 
     - Livros sendo mostrados em forma de card.
     - Visualização de livros emprestados ao usuário, com data prevista de expiração.
@@ -45,10 +49,67 @@ O projeto foi desenvolvido utilizando as seguintes tecnologias:
 - Backend: Django com REST Framework (Python)
 - Frontend: Next.js
 - Banco de Dados: PostgreSQL
+- Infraestrutura: Docker & Docker Compose
 
 ---
 
 ## Primeiros passos
-1. 
+O projeto foi configurado para ser **"Plug-and-Play"**. O ambiente de desenvolvimento (Banco de Dados, Backend e Frontend) é levantado automaticamente com um único comando.
+
+### Pré-requisitos
+- [Docker](https://www.docker.com/) e Docker Compose instalados.
+
+### Instalação
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/matheusdallap/Bibliotech.git
+   cd Bibliotech
+   ```
+
+2. **Configure as Variáveis de Ambiente:**
+Copie o arquivo do exemplo para criar seu .env:
+   ```bash
+    # Linux / Mac
+    cp .env.example .env
+
+    # Windows (PowerShell)
+    copy .env.example .env
+   ```
+
+3. **Suba o Ambiente:**
+Execute o comando abaixo para construir e iniciar os containers:
+    ```bash
+    docker compose up --build
+    ```
+
+### Acessando a Aplicação
+Após o terminal indicar que o servidor iniciou:
+- Frontend (Usuário): http://localhost:3000
+- API (Backend): http://localhost:8000
+- Painel Administrativo da API: http://localhost:8000/admin
+
+Credenciais Padrão (ADMIN) para o Painel Administrativo:
+- Usuário: admin
+- Senha: admin
+
+Credenciais Padrão (ADMIN) para o Frontend:
+- Usuário: admin@bibliotech.com
+- Senha: admin
 
 ---
+
+## Estrutura do Projeto
+
+```
+Bibliotech/
+├── docker-compose.yml    # Orquestração dos containers
+├── .env                  # Variáveis de ambiente
+├── frontend/             # Aplicação Next.js
+└── rest_api/             # Aplicação Django
+    ├── books/            # App de Livros
+    ├── loans/            # App de Empréstimos
+    ├── client/           # App de Usuários
+    ├── entrypoint.py     # Script de automação de inicialização
+    └── manage.py
+```
